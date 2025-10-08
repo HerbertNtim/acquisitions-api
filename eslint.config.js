@@ -1,4 +1,3 @@
-/* eslint-disable linebreak-style */
 import js from '@eslint/js';
 
 export default [
@@ -25,6 +24,7 @@ export default [
       'linebreak-style': ['error', 'unix'],
       quotes: ['error', 'single'],
       semi: ['error', 'always'],
+      
       'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
       'prefer-const': 'error',
