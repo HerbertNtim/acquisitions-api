@@ -5,11 +5,12 @@
   "main": "index.js",
   "imports": {
     "#config/*": "./src/config/*",
-    "#controller/*": "./src/controller/*",
+    "#controllers/*": "./src/controllers/*",
     "#models/*": "./src/models/*",
     "#middleware/*": "./src/middleware/*",
     "#routes/*": "./src/routes/*",
     "#services/*": "./src/services/*",
+    "#utils/*": "./src/utils/*",
     "#validations/*": "./src/validations/*"
   },
   "scripts": {
