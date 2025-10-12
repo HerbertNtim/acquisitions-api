@@ -59,3 +59,5 @@
 {"level":"info","message":"::1 - - [12/Oct/2025:07:59:58 +0000] \"POST /api/auth/sign-in HTTP/1.1\" 200 131 \"-\" \"PostmanRuntime/7.39.1\"","service":"acquisition-api"}
 {"level":"info","message":"User signed out successfully","service":"acquisition-api"}
 {"level":"info","message":"::1 - - [12/Oct/2025:08:00:16 +0000] \"POST /api/auth/sign-out HTTP/1.1\" 200 42 \"-\" \"PostmanRuntime/7.39.1\"","service":"acquisition-api"}
+{"ip":"::1","level":"warn","message":"Bot request blocked","path":"/health","service":"acquisition-api","userAgent":"PostmanRuntime/7.39.1"}
+{"level":"info","message":"::1 - - [12/Oct/2025:10:04:31 +0000] \"GET /health HTTP/1.1\" 403 68 \"-\" \"PostmanRuntime/7.39.1\"","service":"acquisition-api"}
