@@ -1,5 +1,5 @@
 import logger from '#config/logger.js';
-import { getAllUsers, getUserById, updateUser } from '#services/users.service.js';
+import { deleteUser, getAllUsers, getUserById, updateUser } from '#services/users.service.js';
 import { formatValidationError } from '#utils/format.js';
 import { updateUserSchema, userIdSchema } from '#validations/user.validations.js';
 
@@ -127,6 +127,64 @@ export const updateUserById = async (req, res, next) => {
 
     if (e.message === 'Email already exists') {
       return res.status(409).json({ error: 'Email already exists' });
+    }
+
+    next(e);
+  }
+};
+
+export const deleteUserById = async (req, res, next) => {
+  try {
+    logger.info(`Deleting user: ${req.params.id}`);
+
+    // Validate the user ID parameter
+    const validationResult = userIdSchema.safeParse({ id: req.params.id });
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: formatValidationError(validationResult.error),
+      });
+    }
+
+    const { id } = validationResult.data;
+
+    // Authorization checks
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to delete users',
+      });
+    }
+
+    // Only admin users can delete users (prevent self-deletion or user deletion by non-admins)
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'Only administrators can delete users',
+      });
+    }
+
+    // Prevent admins from deleting themselves
+    if (req.user.id === id) {
+      return res.status(403).json({
+        error: 'Operation denied',
+        message: 'You cannot delete your own account',
+      });
+    }
+
+    const deletedUser = await deleteUser(id);
+
+    logger.info(`User ${deletedUser.email} deleted successfully`);
+    res.json({
+      message: 'User deleted successfully',
+      user: deletedUser,
+    });
+  } catch (e) {
+    logger.error(`Error deleting user: ${e.message}`);
+
+    if (e.message === 'User not found') {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     next(e);
