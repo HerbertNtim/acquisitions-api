@@ -1,7 +1,7 @@
 import logger from '#config/logger.js';
-import { getAllUsers, getUserById } from '#services/users.service.js';
+import { getAllUsers, getUserById, updateUser } from '#services/users.service.js';
 import { formatValidationError } from '#utils/format.js';
-import { userIdSchema } from '#validations/user.validations.js';
+import { updateUserSchema, userIdSchema } from '#validations/user.validations.js';
 
 export const fetchAllUsers = async (req, res, next) => {
   try {
@@ -49,6 +49,84 @@ export const fetchUserById = async (req, res, next) => {
 
     if (e.message === 'User not found') {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    next(e);
+  }
+};
+
+export const updateUserById = async (req, res, next) => {
+  try {
+    logger.info(`Updating user: ${req.params.id}`);
+
+    // Validate the user ID parameter
+    const idValidationResult = userIdSchema.safeParse({ id: req.params.id });
+
+    if (!idValidationResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: formatValidationError(idValidationResult.error),
+      });
+    }
+
+    // Validate the update data
+    const updateValidationResult = updateUserSchema.safeParse(req.body);
+
+    if (!updateValidationResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: formatValidationError(updateValidationResult.error),
+      });
+    }
+
+    const { id } = idValidationResult.data;
+    const updates = updateValidationResult.data;
+
+    // Authorization checks
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to update user information',
+      });
+    }
+
+    // Allow users to update only their own information (except role)
+    if (req.user.role !== 'admin' && req.user.id !== id) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'You can only update your own information',
+      });
+    }
+
+    // Only admin users can change roles
+    if (updates.role && req.user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'Only administrators can change user roles',
+      });
+    }
+
+    // Remove role from updates if non-admin user is trying to update their own profile
+    if (req.user.role !== 'admin') {
+      delete updates.role;
+    }
+
+    const updatedUser = await updateUser(id, updates);
+
+    logger.info(`User ${updatedUser.email} updated successfully`);
+    res.json({
+      message: 'User updated successfully',
+      user: updatedUser,
+    });
+  } catch (e) {
+    logger.error(`Error updating user: ${e.message}`);
+
+    if (e.message === 'User not found') {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (e.message === 'Email already exists') {
+      return res.status(409).json({ error: 'Email already exists' });
     }
 
     next(e);
