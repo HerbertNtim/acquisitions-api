@@ -90,3 +90,26 @@ export const updateUser = async (id, updates) => {
     throw e;
   }
 };
+
+export const deleteUser = async id => {
+  try {
+    // First check if user exists
+    await getUserById(id);
+
+    const [deletedUser] = await db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+      });
+
+    logger.info(`User ${deletedUser.email} deleted successfully`);
+    return deletedUser;
+  } catch (e) {
+    logger.error(`Error deleting user ${id}:`, e);
+    throw e;
+  }
+};
